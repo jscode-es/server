@@ -1,0 +1,60 @@
+{
+	"name": "jscode",
+	"version": "1.0.0",
+	"description": "![JSCode](/doc/img/logo-horizontal.png)",
+	"main": "index.js",
+	"directories": {
+		"doc": "doc"
+	},
+	"scripts": {
+		"start": "npm run dev",
+		"dev": "cross-env NODE_ENV=development nodemon",
+		"build": "",
+		"debug": "cross-env NODE_ENV=development DEBUG=express:* nodemon",
+		"test": "jest"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JSCode-es/server.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/JSCode-es/server/issues"
+	},
+	"homepage": "https://github.com/JSCode-es/server#readme",
+	"eslintConfig": {
+		"env": {
+			"jest": true,
+			"cypress/globals": true,
+			"window": true
+		},
+		"plugin": [
+			"cypress"
+		]
+	},
+	"jest": {
+		"testEnviroment": "node",
+		"coveragePathIgnorePatterns": [
+			"/node_modules/"
+		]
+	},
+	"nodemonConfig": {
+		"watch": [
+			"src",
+			"i18n",
+			"frontend"
+		],
+		"ext": "pug,ts,css,json",
+		"exec": "tsc && node ./build.js && node ./dist/app.js",
+		"verbose": false,
+		"legacyWatch": true
+	},
+	"devDependencies": {
+		"cross-env": "^7.0.3"
+	},
+	"dependencies": {
+		"nodemon": "^2.0.7"
+	}
+}
