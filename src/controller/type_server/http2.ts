@@ -145,8 +145,6 @@ export default class http2
         {
             for (const cert of certs) 
             {   
-                console.log('[ cert ]',!fs.existsSync(cert));
-
                 if(!fs.existsSync(cert))
                 {
                     error = `This cert has not been found --> ${cert}`
