@@ -1,3 +1,5 @@
+const $ = process.env
+
 import path from 'path'
 import fs from 'fs-extra'
 import Language from './language'
@@ -7,7 +9,7 @@ export default class router
 {
     static allowSubdomain = [ 'www', 'panel', 'api', 'img' ] 
 
-    static getRouter( req:any, res:any, next:any )
+    static async getRouter( req:any, res:any, next:any )
     {
         // Controller
         let language  = new Language(req)
@@ -27,16 +29,19 @@ export default class router
 
         // Load controller specific subdomain
         let currentRouter = req.subdomain ?  req.subdomain : 'www'
-        let pathController = path.join(String($.router), currentRouter,'controller')
-
-        if(!fs.existsSync(`${pathController}.js`))
+        let pathController = path.resolve(`${__dirname}/../router/${currentRouter}/controller`)
+        
+        // INFO: check type file afte compiler
+        /*if(!fs.existsSync(`${pathController}.ts`))
         {
             console.log(`[ Router ] This controller not found: ${currentRouter}`)
             return next()
-        }
+        }*/
 
         // TODO: Enrutado de la carpeta de los subdominios
-
+        
+        let controller = await(await import(`${pathController}`)).default
+        new controller(req, res, next)
 
 
     }
@@ -53,9 +58,9 @@ export default class router
             if(param.length != 0) 
             {
                 if(paramsName[index])
-                    objectParams[paramsName[index]] = param
+                    objectParams[paramsName[index]] = String(param).trim()
                 else
-                    paramsName[index] = param
+                    paramsName[index] = String(param).trim()
             }
 
             index++
