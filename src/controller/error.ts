@@ -9,6 +9,8 @@ export default class error
 
     private static unhandledRejection( reason:any, promise:any)
     { 
+        console.dir(promise)
+
         console.log(`[ unhandledRejection ] ${promise}, reason: ${reason}`)
     }
 
