@@ -1,4 +1,4 @@
-const $ =  process.env
+const env =  process.env
 
 import isIp from 'is-ip'
 
@@ -27,7 +27,7 @@ export default class subdomain
 
         let sub = def_host.split('.')
 
-        let subLen = ( $.NODE_ENV && $.NODE_ENV === 'development' ) ? 2 : 3
+        let subLen = ( env.NODE_ENV && env.NODE_ENV === 'development' ) ? 2 : 3
 
         def_subdomain = sub.length === subLen ? sub[0] : def_subdomain
         
