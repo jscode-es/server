@@ -1,4 +1,4 @@
-const $ = process.env
+const env = process.env
 
 import path from 'path'
 import fs from 'fs-extra'
@@ -50,7 +50,7 @@ export default class router
     {
         let params       = pathname.split('/').join(' ').trim().split(' ')
         let index        = 0
-        let paramsName   = [ 'service', 'page ']  // https://${host}/${service}/${page} ej: https://jscode.es/about/cv
+        let paramsName   = [ 'service', 'page' ]  // https://${host}/${service}/${page} ej: https://jscode.es/about/cv
         let objectParams:any = {}
 
         for (const param of params) 
