@@ -44,8 +44,10 @@ export default class www
 			// Response HTML
 			} else {
 
-				data = await resource.html()
-				return res.send(data)
+				data = await resource.html(page)
+
+				if(data) return res.send(data)
+				else res.redirect('/')
 			}
 		}
 
