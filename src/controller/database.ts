@@ -1,4 +1,4 @@
-const $ = process.env
+const env = process.env
 
 import mysql from 'promise-mysql'
 import error from './error'
@@ -26,10 +26,10 @@ export default class database
     {
         let setting =
         {
-            host: $.IP ,
-            user: $.DB_USER ,
-            password: $.DB_PASS,
-            database: $.DB_TABLE,
+            host: env.IP ,
+            user: env.DB_USER ,
+            password: env.DB_PASS,
+            database: env.DB_TABLE,
             port:3306,
             multipleStatements:true,
             connectionLimit:5000,
@@ -37,7 +37,7 @@ export default class database
             connectionTimeout:30000,
             supportBigNumbers:true,
             stringifyObject:true,
-            charset: $.DB_CHARSET,
+            charset: env.DB_CHARSET,
             queryFormat: function(query:any, values:any)
             {
                 if(!values) return query
@@ -51,7 +51,7 @@ export default class database
 
                     return txt
 
-                }).bind(this)
+                })
             }
         }
 
@@ -435,6 +435,7 @@ export default class database
         try {
 
             let con  = await this.connection()
+            
             let data = await con.query(sql, attrs)
 
             this.result = data
@@ -445,11 +446,12 @@ export default class database
             
         } catch (error) {
 
-            error.database(error)
+            console.log(error)
 
             return this.result
             
         }
+
     }
 
     // Return values 
@@ -527,9 +529,9 @@ export default class database
 
     async call( process:string, attr:any )
     {
-        let result = [];
+        //*let result = [];
 
-        if(process)
+        /*if(process)
         {
             attr = JSON.stringify(attr);        
             let sql = `CALL ${process} ('${attr}')`;
@@ -537,7 +539,7 @@ export default class database
 
         }
 
-        return result;
+        return result;*/
     }
 
 
@@ -548,7 +550,7 @@ export default class database
 
         let data = await db.query(sql);
 
-        for (const queries of data) 
+        /*for (const queries of data) 
         {  
             if(queries.Time >= 150)
             {
@@ -558,7 +560,7 @@ export default class database
                 }
                 
             }
-        }
+        }*/
     }
 
     static async backup()
@@ -573,11 +575,11 @@ export default class database
         mysqldump({
             connection: {
                 host: '82.223.10.139',
-                user: $.db_User,
-                password: $.db_Pass,
-                database: $.db_Table,
+                user: env.db_User,
+                password: env.db_Pass,
+                database: env.db_Table,
             },
-            dumpToFile: path.resolve(`${$.backup}/${dumpFileName}`),
+            dumpToFile: path.resolve(`${env.backup}/${dumpFileName}`),
             compressFile: true
         });*/
     }
