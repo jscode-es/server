@@ -1,5 +1,5 @@
 // Enviorenment system
-const $ = process.env
+const env = process.env
 
 import { ISettingServer } from "./../interface/i_setting_server"
 
@@ -14,6 +14,7 @@ import cookie from 'cookie-parser'
 import session from 'express-session'
 import compression from 'compression'
 import cors from 'cors'
+import socket from './websocket'
 
 // Store ram
 import redis from 'redis'
@@ -23,6 +24,8 @@ const redisClient = redis.createClient()
 const redistStore = redisConnect(session)
 
 import router from './../router'
+import { log } from "node:console"
+import twitch from './../twitch'
 
 export default class http2
 {
@@ -74,7 +77,7 @@ export default class http2
         // Setting session
         let settingSession:any =
         {
-            secret: String($.SECRET_SESSION),
+            secret: String(env.SECRET_SESSION),
             store: new redistStore({ client:redisClient}),
             name:'jscode',
             resave:false,
@@ -106,7 +109,7 @@ export default class http2
         this.app.disable('etag')
 
         // render sistem
-        this.app.set('view', String($.view))
+        this.app.set('view', String(env.view))
         this.app.set('view engine', 'pug')
 
         // Listener to server
@@ -116,9 +119,9 @@ export default class http2
 
     private static getCerticate():object
     {
-        let cert = path.resolve(String($.CERT))
-        let key  = path.resolve(String($.CERT_KEY))
-        let ca   = path.resolve(String($.CERT_CA))
+        let cert = path.resolve(String(env.CERT))
+        let key  = path.resolve(String(env.CERT_KEY))
+        let ca   = path.resolve(String(env.CERT_CA))
 
         let { error }:any =  http2.isCertExist([cert,key,ca])
 
@@ -187,7 +190,7 @@ export default class http2
 
     private contentStatic()
     {
-        let content = express.static(String($.contentPublic), { etag:false, dotfiles:'allow'})
+        let content = express.static('public', { etag:false, dotfiles:'allow'})
 
         this.app.use(content)
     }
@@ -241,14 +244,17 @@ export default class http2
             this.redirectToSSL()
         }
 
-        server.listen(port, String($.IP), ()=>{
+        server.listen(port, String(env.IP), ()=>{
 
             // Set Router
             // https://jscode.es/about
+            new socket(server)
 
             that.app.use('/', router.getRouter )
 
             that.app.use(this.error)
+
+            //twitch.test()
 
         })
         
