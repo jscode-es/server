@@ -1,229 +1,540 @@
-const env = process.env
+const $ = process.env
 
 import mysql from 'promise-mysql'
 import error from './error'
 import {helper} from  './helper'
 import {ISettingParams} from './interface/i_setting_params'
 
-export default class database
+export default class DataBase
 {
     private engine:string = 'mysql'
     private result:any    = []
-    private setting:any   = {}
+    private _setting:any   = {}
+    
+    constructor ( arg:any = {} )
+    {   
+        this.engine = 'mysql';
+        this.result = [];
 
-    private static readonly INSERT:string = 'INSERT INTO'
-    private static readonly SELECT:string = 'SELECT'
-    private static readonly DELETE:string = 'DELETE'
-    private static readonly REMOVE:string = 'DELETE FROM ' 
-    private static readonly UPDATE:string = 'UPDATE '
-
-    constructor(params:any = {}) 
-    {
-        this.setSetting(params)
-    }
-
-    private setSetting(params:any)
-    {
-        let setting =
+        this._setting = 
         {
-            host: env.IP ,
-            user: env.DB_USER ,
-            password: env.DB_PASS,
-            database: env.DB_TABLE,
-            port:3306,
-            multipleStatements:true,
-            connectionLimit:5000,
-            dateStrings:true,
-            connectionTimeout:30000,
+            host:$.IP,
+			user: $.DB_USER,
+			password:$.DB_PASS,
+			database: $.DB_TABLE,
+            port: 3306,
+            multipleStatements: true,
+			connectionLimit: 5000,
+			dateStrings: true,
+            connectTimeout: 30000,
+            //insecureAuth : true
+            //debug: true,
             supportBigNumbers:true,
-            stringifyObject:true,
-            charset: env.DB_CHARSET,
-            queryFormat: function(query:any, values:any)
-            {
-                if(!values) return query
-
-                return query.replace(/\:(\w+)/g, function(txt:any, key:any){
-
-                    if(values.hasOwnProperty(key))
-                    {
-                        return this.escape(values[key])
-                    }
-
-                    return txt
-
-                })
+            stringifyObjects:true,
+            charset:arg.charset ? arg.charset : 'UTF8_GENERAL_CI',
+            queryFormat:function (query:any, values:any) {
+                        
+                if (!values) return query;
+                return query.replace(/\:(\w+)/g, function (txt:any, key:any) {
+                if (values.hasOwnProperty(key)) {
+                    return this.escape(values[key]);
+                }
+                return txt;
+                }.bind(this));
             }
         }
 
-        Object.assign(setting, params)
-
-        this.setting = setting
     }
 
-    // Connection
-    private async connection() 
-    {
-        return await mysql.createConnection(this.getSetting())
+    // Editar confguración
+    setting ( source = {} )
+    {   
+        this._setting = Object.assign(this._setting, source);
+        return this;
     }
 
-    private static prepareSQL(type:string, table:string, attrs:ISettingParams):any
-    {
-        let sql = type
-        let { values, set, where, like, findset, order, limit, insert } = attrs
+    // Establecer conexión
+    async connect ()
+    {  
+        return await mysql.createConnection(this._setting);
+    }
 
-        if(attrs)
-        {
-            sql += (values) ? database.values(values) : ((type===database.SELECT)) ? '*' : ''
-            sql += (type === database.SELECT || type === database.DELETE ) ? ' FROM' : ''
-            sql += `\`${table}\``
-            sql += (set) ? database.setUpdate(set) : ''
-            sql += (where) ? database.where(where) : ''
-            sql += (like) ? database.like(like, database.isWhereExist(sql)) :''
-            sql += (findset) ?  database.findSet(findset, database.isWhereExist(sql)) : ''
-            sql += (order) ? database.order(order) : ''
-            sql += (limit) ? database.limit(limit)  : '';
-            sql += (insert) ? database.insert(insert) : ''
-        
-        } else {
+    // Punto de acceso a la consulta
+    async query ( sql:any, args:any = {})
+    {   
+        try {
+            
+            let con  = await this.connect();
 
-            sql += ( type === database.SELECT) ? ' * FROM ' : ''
-            sql += ( type === database.DELETE) ? ' FROM ' : ''
-            sql += `\`${table}\``
+            console.log(sql,args);
+
+            let data = await con.query( sql ,args );
+
+            this.result = data;
+
+            con.end();
+
+            return data;
+
+        } catch (error) {
+
+            DataBase.error(error);
+
+            this.result = [];
+
+            return [];
         }
 
-        return sql
+        
     }
 
-    private static prepareParams(attrs:object):any
-    {
-        return ''
+    // Manejador de errores
+    static error ( err:any, type:any = 'HandlerError' )
+	{
+        if( err ) 
+        {   
+
+            // ===============================
+            // ERRORES
+            //===============================
+            // err.code       = ER_ACCESS_DENIED_ERROR, ECONNREFUSED, PROTOCOL_CONNECTION_LOST, ...
+            // err.errno      = Número, contiene el número de error del servidor MySQL.
+            // err.fatal      = Booleano, que indica si este error es terminal para el objeto de conexión. Si el error no proviene de una operación de protocolo MySQL, esta propiedad no se definirá.
+            // err.sql        = Cadena, contiene el SQL completo de la consulta fallida. Esto puede ser útil cuando se utiliza una interfaz de nivel superior como un ORM que genera las consultas.
+            // err.sqlState   = Cadena, contiene el valor SQLSTATE de cinco caracteres.
+            // err.sqlMessage = Cadena, contiene la cadena del mensaje que proporciona una descripción textual del error.
+            //===============================
+            
+            // Eliminar proceso lentos
+            DataBase.killSlowQuery();
+
+            // Too many connections
+            if(err.code=='ER_CON_COUNT_ERROR')
+            {
+                console.error('***************************');
+                console.error('MYSQL ERROR [ ER_CON_COUNT_ERROR ] ' );
+
+            } else {
+
+                console.error('***************************');
+                console.error('MYSQL ERROR [ '+type+' ] :', err )
+            }
+
+            // Duplicado 
+			//if(err.code=='ER_DUP_ENTRY') return false;	
+		} 
     }
 
-    private static values(data:any):string
+    // Metodo para validar si no hay datos
+    async isEmpty()
+    {   
+        return (this.result.length == 0);
+    }
+
+    async isSuccess()
     {
-        let values:string = ' ';
+        return (this.result.affectedRows > 0);
+    }
+
+    async getId()
+    {
+        return this.result.insertId;
+    }
+
+    // Preparar consulta
+    static prepare (type:any, table:any, attr:any )
+    {   
+        let sql = `${type}` ;
+
+        if(attr)
+        {   
+            sql += (attr.values) ? DataBase.values(attr.values) : ((type=='SELECT') ? ' *': '');
+            sql += (type=='SELECT' || type=='DELETE') ? ' FROM ' : '';
+            sql += `\`${table}\``;
+            sql += (attr.set) ? DataBase.setUpdate(attr.set)  : '';
+            sql += (attr.where) ? DataBase.where(attr.where)  : '';
+            sql += (attr.in)  ? DataBase.in(attr.in, DataBase.isWhereExist(sql))    : '';
+            sql += (attr.like)  ? DataBase.like(attr.like, DataBase.isWhereExist(sql))    : '';
+            sql += (attr.findSet)  ? DataBase.findSet(attr.findSet, DataBase.isWhereExist(sql))    : '';
+            sql += (attr.order) ? DataBase.order(attr.order)  : '';
+            sql += (attr.limit) ? DataBase.limit(attr.limit)  : '';
+            sql += (attr.insert) ? DataBase.insert(attr.insert) : '';
+
+        } else {
+
+            sql += (type=='SELECT') ? ' * FROM ' : '';
+            sql += (type=='DELETE') ? ' FROM ' : '';
+            sql += `\`${table}\``;
+        }
+
+        return sql;
+    }
+
+    // Prepara parametros
+    static prepareParams(data:any)
+    {
+        let _params:any = {};
+        let _where  = data.where;
+        let _like   = data.like;
+        let _insert = data.insert;
+        let _set = data.set;
+        let _in  = data.in;
+        let _call = data.call;
+
+        if(data)
+        { 
+            if(_where)
+            {   
+
+                if(typeof _where === 'object')
+                {
+
+                    for (const key in _where) 
+                    {   
+                        let attr = key.split(':');
+
+                        if(attr.length == 1)
+                        {
+                            // Array de OR 
+                            if(Array.isArray(_where[key]))
+                            {   
+                                _where[key].forEach((value:any, index:any)=>{
+                                    
+                                    _params[`w_${key}_${index}`] = value;
+
+                                });
+
+                            } else {
+                            
+                                _params[`w_${key}`] = _where[key];
+                                
+                            }
+
+                        } else {
+
+
+                            attr.forEach((value:any, index:any)=>{
+                        
+                                _params[`w_${value}_${index}`] = Object.values(_where)[0];
+
+                            });
+
+                            
+                        }
+                        
+                    }
+                }
+            }
+
+            if(_like)
+            {
+                
+                if(typeof _like === 'object')
+                {
+
+                    for (const key in _like) 
+                    {   
+                        let attr = key.split(':');
+
+                        if(attr.length == 1)
+                        {
+                            // Array de OR 
+                            if(Array.isArray(_like[key]))
+                            {   
+                                _like[key].forEach((value:any, index:any)=>{
+                                    
+                                    _params[`l_${key}_${index}`] = value;
+
+                                });
+
+                            } else {
+                            
+                                _params[`l_${key}`] = _like[key];
+                                
+                            }
+                            
+                        } else {
+
+                            attr.forEach((value:any, index:any)=>{
+                        
+                                _params[`l_${value}_${index}`] = Object.values(_like)[0];
+
+                            });
+                        }
+
+                        
+                    }
+                }
+            }
+
+            if(_in)
+            {
+               
+                if(typeof _in === 'object')
+                {
+                   
+                    for (const key in _in) 
+                    {   
+                        let attr = key.split(':');
+
+                        if(attr.length == 1)
+                        {
+                            // Array de OR 
+                            if(Array.isArray(_in[key]))
+                            {   
+                                _in[key].forEach((value:any, index:any)=>{
+                                    
+                                    _params[`in_${key}_${index}`] = value;
+
+                                });
+
+                            } else {
+                            
+                                _params[`in_${key}`] = _in[key];
+                                
+                            }
+                            
+                        } else {
+
+                            
+                            attr.forEach((value:any, index:any)=>{
+                                
+                                _params[`in_${value}_${index}`] = Object.values(_in)[0];
+
+                            });
+                        }
+
+                        
+                    }
+                }
+            }
+
+            if(_insert)
+            {
+                if(typeof _insert === 'object')
+                {
+
+                    for (const key in _insert) 
+                    {   
+                        // Array de OR 
+                        if(Array.isArray(_insert[key]))
+                        {   
+                            _insert[key].forEach((value:any, index:any)=>{
+                                
+                                _params[`i_${key}_${index}`] = value;
+
+                            });
+
+                        } else {
+                           
+                            _params[`i_${key}`] = _insert[key];
+                            
+                        }
+                    }
+                }
+            }
+
+            if(_set)
+            {
+                
+                if(typeof _set === 'object')
+                {
+
+                    for (const key in _set) 
+                    {   
+                        // Array de OR 
+                        if(Array.isArray(_set[key]))
+                        {   
+                            _set[key].forEach((value:any, index:any)=>{
+                                
+                                _params[`s_${key}_${index}`] = value;
+
+                            });
+
+                        } else {
+                           
+                            _params[`s_${key}`] = _set[key];
+                            
+                        }
+                    }
+                }
+            }
+
+            if(_call)
+            {
+                
+                if(typeof _call === 'object')
+                {
+
+                    for (const key in _call) 
+                    {   
+                        // Array de OR 
+                        if(Array.isArray(_call[key]))
+                        {   
+                            _call[key].forEach((value:any, index:any)=>{
+                                
+                                _params[`c_${key}_${index}`] = value;
+
+                            });
+
+                        } else {
+                           
+                            _params[`c_${key}`] = _call[key];
+                            
+                        }
+                    }
+                }
+            }
+        }   
+
+       
+
+
+        return _params;
+    }
+
+    // Preparar values
+    static values(data:any)
+    {   
+        let _values = ' ';
 
         if(Array.isArray(data))
         {
+            data.forEach((value, index, array) => {
 
-            data.forEach((value)=>{
+                let attr = value.split(':');
 
-                let attr = value.split(':')
-
-                if(attr.length === 1)
+                if(attr.length==1)
                 {
+                    _values+= DataBase.isFunctionExist(attr[0]) ? `${attr[0]}, ` : `\`${attr[0]}\`, `;
 
-                    values += database.isFunExist(attr[0]) ? `${attr[0]}, ` : `\`${attr[0]}\`, ` // SELECT ${#}
+                } else if (attr.length==2){   
 
-                } else if (attr.length === 2) {
-
-                    values += database.isFunExist(attr[0]) ? `${attr[0]} AS \`${attr[1]}\`, ` : `\`${attr[0]}\` AS \`${attr[1]}\`, ` 
+                    _values+= DataBase.isFunctionExist(attr[0]) ? `${attr[0]} AS \`${attr[1]}\`, ` :  `\`${attr[0]}\` AS \`${attr[1]}\`, `;
                 }
 
-            })
+            });
 
-            values = values.slice(0,-2)
-
+            _values = _values.slice(0,-2);
         }
 
-
-        return values
+        return _values;
     }
-    
-    private static where(data:any):string
+
+    // Preparar where
+    static where(data:any)
     {
-        let where = ''
+        let _where = '';
 
-        if( typeof data === 'object')
+        if(typeof data === 'object')
         {
-            where += ' WHERER '
+            _where = ' WHERE ';
 
-            for (const key in data)
-            {
-                let attrs = key.split(':')
+            for (let key in data) 
+            {   
+                let attr = key.split(':');                
+                let val = data[key];
 
-                if(attrs.length === 1)
-                {
+                let compareSymbol = "=";
+                switch (key.slice(-2)) {
+                    case "<<":                        
+                    case ">>": 
+                        delete data[key];
+                        compareSymbol = key.slice(-1);
+                        key = key.substr(0,key.length-2)
+                        data[key] = val;  
+                        break;                    
+                    case "<=":                       
+                    case ">=":
+                        delete data[key];
+                        compareSymbol = key.slice(-2);
+                        key = key.substr(0,key.length-2);
+                        data[key] = val;
+                        break;
+                    case "!=":
+                    case "<>":
+                        delete data[key];
+                        compareSymbol = key.slice(-2);
+                        key = key.substr(0,key.length-2);
+                        data[key] = val;
+                        break;
 
+                }
+                 
+                if(attr.length == 1)
+                {   
+                    // Array de OR 
                     if(Array.isArray(data[key]))
-                    {
+                    {   
 
-                        // check size where
-                        if(where.length != 7 ) where += ' AND '
+                        if(_where.length != 7) _where += ' AND ';
 
-                        where += '( '
+                        _where += '( ';
 
-                        data[key].array.forEach((value:any,index:any) => {
-                            
-                            if(value === null)
+                        data[key].forEach((value:any, index:any)=>{
+
+                            if(value==null)
                             {
-                                where += `\`${key}\` is nul OR `
+                                _where += `\`${key}\` is null OR `
                             } else {
-                                where += `\`${key}\` =  :w_${key}_${index} OR `
+                                _where += `\`${key}\` ${compareSymbol} :w_${key}_${index} OR `
                             }
-                        })
 
-                        where = where.slice(0, -3)
-                        where = ') '
+
+                        });
+
+                        _where = _where.slice(0,-3);
+                        _where += ') ';
+                    
 
                     } else {
 
-                        if(where.length != 7) where += ` AND `;
+                        if(_where.length != 7) _where += ` AND `;
 
                         if(data[key]==null)
                         {
-                            where += `\`${key}\` is null`;   
+                            _where += `\`${key}\` is null`;   
 
                         } else {
-                            where += `\`${key}\` = :w_${key}`;   
+                            _where += `\`${key}\` ${compareSymbol} :w_${key}`;   
                         }
-                    }
 
+                    }
 
                 } else {
 
-                    where += '( ';
+                    _where += '( ';
 
-                    attrs.forEach((value, index)=>{
+                    attr.forEach((value, index)=>{
                 
-                        where += `\`${value}\` = :w_${value}_${index} OR `
+                        _where += `\`${value}\` ${compareSymbol} :w_${value}_${index} OR `
 
                     });
 
-                    where = where.slice(0,-3);
-                    where += ') ';
+                    _where = _where.slice(0,-3);
+                    _where += ') ';
                 }
+
+                
             }
+            
         }
-
-        return where 
+        
+        return _where;
     }
 
-    private static setUpdate(data:any):string
+    // Preparar like
+    static like(data:any, _isWhereExist:any = false )
     {
-        let values = '';
-         
-        for (const key in data) 
-        {
-            values+= "`"+key+"` = :s_"+key+","
-        }
+        let _like = '';
 
-        values = values.slice(0,-1);
-
-        return ` SET ${values}`;
-    }
-
-    private static like(data:any, isWhereExist = false ):string
-    {
-        let like = ''
-
-        if(!isWhereExist) like = ' WHERE '
+        if(!_isWhereExist) _like = ' WHERE ';
 
         if(typeof data === 'object')
         {
             for (const key in data) 
             {   
-                let attr = key.split(':')
+                let attr = key.split(':');
 
                 if(attr.length == 1)
                 {
@@ -231,42 +542,103 @@ export default class database
                     if(Array.isArray(data[key]))
                     {   
 
-                        if(like != ' WHERE ' ) like += ' AND ';
+                        if(_like != ' WHERE ' ) _like += ' AND ';
 
-                        like += '( '
+                        _like += '( ';
 
                         data[key].forEach((value:any, index:any)=>{
                 
-                            like += `\`${key}\` LIKE :l_${key}_${index} OR `
+                            _like += `\`${key}\` LIKE :l_${key}_${index} OR `
 
                         });
 
-                        like = like.slice(0,-3)
-                        like += ') '
+                        _like = _like.slice(0,-3);
+                        _like += ') ';
                     
 
                     } else {
                         
-                        if( like != ' WHERE ' ) like += ' AND '
+                        if( _like != ' WHERE ' ) _like += ' AND ';
+                        //if(_like.length != 0 || _like != ' WHERE ' ) _like += ' AND ';
 
-                        like += `\`${key}\` LIKE :l_${key}`
+                        _like += `\`${key}\` LIKE :l_${key}`;
                         
                     }
 
                 } else {
 
-                    if(like != ' WHERE ' ) like += ' AND '
+                    if(_like != ' WHERE ' ) _like += ' AND ';
 
-                    like += '( ';
+                    _like += '( ';
 
                     attr.forEach((value, index)=>{
                 
-                        like += `\`${value}\` LIKE :l_${value}_${index} OR `
+                        _like += `\`${value}\` LIKE :l_${value}_${index} OR `
 
                     });
 
-                    like = like.slice(0,-3)
-                    like += ') '
+                    _like = _like.slice(0,-3);
+                    _like += ') ';
+                }  
+            }
+        }
+
+        return _like;
+
+    }
+
+    // Preparar in
+    static in(data:any, _isWhereExist:any = false )
+    {
+        let _in = '';
+
+        if(!_isWhereExist) _in = ' WHERE ';
+
+        if(typeof data === 'object')
+        {
+            for (const key in data) 
+            {   
+                let attr = key.split(':');
+
+                if(attr.length == 1)
+                {
+                    // Array de OR 
+                    if(Array.isArray(data[key]))
+                    {   
+                        if(_in != ' WHERE ' ) _in += ' AND ';
+
+                        _in += ` \`${key}\` IN( `;
+
+                        data[key].forEach((value:any, index:any)=>{
+                
+                            _in += ` :in_${key}_${index} , `
+
+                        });
+
+                        _in = _in.slice(0,-3);
+                        _in += ') ';
+                    
+
+                    } else {
+                        
+                        if( _in != ' WHERE ' ) _in += ' AND ';
+                        _in += `\`${key}\` IN( :in_${key} )`;
+                        
+                    }
+
+                } else {
+
+                    if(_in != ' WHERE ' ) _in += ' AND ';
+
+                    _in += '( ';
+
+                    attr.forEach((value, index)=>{
+                
+                        _in += `\`${value}\` IN ( :in_${value}_${index} ) `
+                    });
+
+                    _in = _in.slice(0,-3);
+                    _in += ') ';
                 }
 
                 
@@ -274,14 +646,16 @@ export default class database
             
         }
 
-        return like;
+        return _in;
+
     }
 
-    private static findSet(data:any, isWhereExist = false ):string
+    // Preparar FIND_IN_SET
+    static findSet(data:any, _isWhereExist:any = false )
     {
         let _in = '';
 
-        if(!isWhereExist) _in = ' WHERE ';
+        if(!_isWhereExist) _in = ' WHERE ';
 
         if(typeof data === 'object')
         {
@@ -310,9 +684,10 @@ export default class database
                     
 
                     } else {
-                        if( _in != ' WHERE ' ) _in += ' AND ';
 
-                        _in += `FIND_IN_SET (\`${key}\`, :in_${key} ) != 0 `;
+                        if( _in != ' WHERE ' ) _in += ' AND ';
+                        let a = data[key]
+                        _in += `FIND_IN_SET (\'${data[key]}\',\`${key}\` ) != 0 `;
                         
                     }
 
@@ -322,7 +697,7 @@ export default class database
 
                     _in += '( ';
 
-                    attr.forEach((value)=>{
+                    attr.forEach((value, index)=>{
                 
                         _in += `FIND_IN_SET(\'${value}\', \`${key}\` ) != 0 OR `
 
@@ -341,28 +716,47 @@ export default class database
 
     }
 
-    private static order(data:any):string
-    {
-        let order = '';
+    // Preparar order
+    static order(data:any)
+    {   
+        let _order = '';
 
         if(typeof data === 'object' && Object.keys(data).length > 0)
         {
-            order = ' ORDER BY '
+            _order = ' ORDER BY '
 
             for (const key in data) 
             {
-                order+=`\`${key}\` ${data[key].toUpperCase()}, `
+                _order+=`\`${key}\` ${data[key].toUpperCase()}, `
             }
 
-            order = order.slice(0,-2);
+            _order = _order.slice(0,-2);
             
         }
 
-        return order;      
+        return _order;
+    }
+    
+    // Preparar limit
+    static limit(data:any)
+    {   
+        let _limit = '';
+
+        if(typeof data === 'string')
+        {   
+            _limit = ` LIMIT ${data}`;
+
+        } else {
+            
+            _limit = ` LIMIT ${String(data)}`;
+        }
+
+        return _limit
     }
 
-    private static insert(data:any):string
-    {
+    // Preparar insert
+    static insert(data:any)
+    {   
         let attr = '';
         let values = '';
          
@@ -376,30 +770,33 @@ export default class database
         values = values.slice(0,-1);
 
         return `(${attr}) VALUES (${values})`;
+      
     }
 
-    private static limit(data:any):string
+    // Preparar setUpdate
+    static setUpdate(data:any)
     {   
-        let limit = '';
-
-        if(typeof data === 'string')
-        {   
-            limit = ` LIMIT ${data}`;
-
-        } else {
-            
-            limit = ` LIMIT ${String(data)}`;
+        let set = '';
+        let values = '';
+         
+        for (const key in data) 
+        {
+            values+= "`"+key+"` = :s_"+key+","
         }
 
-        return limit
-    }
+        values = values.slice(0,-1);
 
-    private static callParams(data:any):string
+        return ` SET ${values}`;
+    
+    }
+    
+    // Preparar Objeto JSON de procedure
+    static callParams(data:any)
     {
         let values = "'{";
 
         for (const key in data) {
-            // console.log("DATA KEY", data[key]);
+
             if (data[key] == null)
                 values += `"${key}": "NULL",`;
             else
@@ -412,145 +809,183 @@ export default class database
         return values;
     }
 
-    private static isWhereExist(data:any):boolean
+    // Detectar where
+    static isWhereExist(data:any)
     {
-        return false
+        const regex = /WHERE/gm;
+
+        return regex.test(data);
     }
 
-    private static isFunExist(data:any):boolean
+    // Detectar where
+    static isFunctionExist(data:any)
     {
-        const expression = /\(/gm
+        const regex = /\(/gm;
 
-        return expression.test(data)
+        return regex.test(data);
     }
-
-    getSetting():any
+    
+    // Buscar en toda la tabla
+    async findAll ( table:any, attr:any = {} )
     {
-        return this.setting
-    }
+        let result = [];
 
-    // Query
-    async query( sql:string, attrs = {})
-    {
-        try {
-
-            let con  = await this.connection()
+        if(table) 
+        {    
             
-            let data = await con.query(sql, attrs)
+            let sql     = DataBase.prepare('SELECT', table, attr);
+            let params  = DataBase.prepareParams(attr);
 
-            this.result = data
+            result = await this.query(sql, params);
+
             
-            con.end()
-
-            return data
-            
-        } catch (error) {
-
-            console.log(error)
-
-            return this.result
             
         }
-
+        
+        return result;
     }
 
-    // Return values 
-    isEmpty()
+    // Añadir registro
+    async add ( table:any, attr:any)
     {
-        return this.result.length === 0
-    }
+        let result = [];
 
-    isSuccess()
-    {
-        return this.result.affectedRows > 0
-    }
+        if(table && attr) 
+        { 
+            let sql     = DataBase.prepare('INSERT INTO ', table, {insert:attr});
+            let params  = DataBase.prepareParams({insert:attr});
 
-    getId()
-    {
-        return this.result.insertId
-    }
+            //console.time('QUERY');
+            result = await this.query(sql, params);
+            //console.timeEnd('QUERY');
 
-    // Method insert
-    async add(table:string, attrs: object)
-    {
-        if(helper.isString(table) && !helper.isStringEmpty(table) && attrs)
-        {
-            let sql     = database.prepareSQL(database.INSERT, table, {insert:attrs})
-            let params  = database.prepareParams({insert:attrs})
-
-            this.result = await this.query(sql, params)
+            
         }
 
-        return this.result
-
+        return result;
     }
 
-    // Method read
-    async findAll(table:string, attrs: object)
+    // Eliminar registro
+    async remove ( table:any, attr:any)
     {
-        if(helper.isString(table) && !helper.isStringEmpty(table) && attrs)
-        {
-            let sql     = database.prepareSQL(database.SELECT, table, {insert:attrs})
-            let params  = database.prepareParams({insert:attrs})
+        let result = [];
 
-            this.result = await this.query(sql, params)
+        if(table && attr) 
+        { 
+            let sql     = DataBase.prepare('DELETE FROM ', table, attr );
+            let params  = DataBase.prepareParams(attr);
+
+            result = await this.query(sql, params);
+
+            if($.showLogDelete == 'true')
+            {
+                console.log('PARAMS: ', params );
+                console.log('RESULT: ', result );
+            }
         }
 
-        return this.result
+        return result;
     }
 
-    // Method update
-    async update(table:string, attrs: object)
+    // Actualizar registro
+    async update ( table:any, attr:any)
     {
-        if(helper.isString(table) && !helper.isStringEmpty(table) && attrs)
-        {
-            let sql     = database.prepareSQL(database.UPDATE, table, {insert:attrs})
-            let params  = database.prepareParams({insert:attrs})
+        let result = [];
 
-            this.result = await this.query(sql, params)
+        if(table && attr) 
+        { 
+            let sql     = DataBase.prepare('UPDATE ', table, attr );
+            let params  = DataBase.prepareParams(attr);
+
+            result = await this.query(sql, params);
+
+            if($.showLogUpdate == 'true')
+            {
+                console.log('PARAMS: ', params );
+                console.log('RESULT: ', result );
+            }
         }
 
-        return this.result
+        return result;
     }
 
-    // Method delete
-    async remove(table:string, attrs: object)
+    // Preparar SQL de llamada a Stored Procedure
+    static prepareCall (type:any, process:any, attr:any )
     {
-        if(helper.isString(table) && !helper.isStringEmpty(table) && attrs)
-        {
-            let sql     = database.prepareSQL(database.REMOVE, table, {insert:attrs})
-            let params  = database.prepareParams({insert:attrs})
+        let sql = `${type} ${process} (` ;
 
-            this.result = await this.query(sql, params)
+        if(attr)
+        {  
+            sql += DataBase.callParams(attr);
+        } 
+
+        sql += ')';
+
+        return sql;
+    }
+
+    async prepareCallParams(data:any)
+    {
+        for (const key in data) {
+            if (typeof data[key] == 'string')
+            {
+                data[key] = data[key].replace(/'/g,"\\'");
+            }
         }
-
-        return this.result
+        return data;
     }
 
-    async call( process:string, attr:any )
+    // Llamar a los processo almacenados
+    async call( process:any, attr:any )
     {
-        //*let result = [];
+        /*let result = [];
 
-        /*if(process)
+        if(process)
         {
-            attr = JSON.stringify(attr);        
+           
+            attr = JSON.stringify(attr);
+            // attr = attr.replace(/'/g,"\\'");
+            
+            // let params = this.prepareCallParams(attr);
+            // params = JSON.stringify(params);
+            // let sql = DataBase.prepareCall("CALL", process, attr);            
             let sql = `CALL ${process} ('${attr}')`;
             result = await this.query(sql);
 
-        }
+
+            /*  --------------
+
+                Return db.call( [method], [json] )
+
+                return 
+                [
+                    [ { id: number } ],
+                    {
+                        fieldCount: 0,
+                        affectedRows: 0,
+                        insertId: 0,
+                        serverStatus: 2,
+                        warningCount: 0,
+                        message: '',
+                        protocol41: true,
+                        changedRows: 0
+                    }
+                ]
+
+                --------------*/
+        /*}
 
         return result;*/
     }
 
-
     static async killSlowQuery()
     {
-        let sql = 'show full processlist';
-        let db  = new database();
+        /*let sql = 'show full processlist';
+        let db  = new DataBase();
 
         let data = await db.query(sql);
 
-        /*for (const queries of data) 
+        for (const queries of data) 
         {  
             if(queries.Time >= 150)
             {
@@ -561,27 +996,6 @@ export default class database
                 
             }
         }*/
-    }
-
-    static async backup()
-    {
-        /*console.log('[ Database ] Iniciar copia de seguridad');
-        
-        const path           = require('path');
-        const { v4: uuidv4 } = require('uuid');
-        const mysqldump      = require('mysqldump');
-        const dumpFileName   = `${uuidv4()}.dump.sql.gz`;
-
-        mysqldump({
-            connection: {
-                host: '82.223.10.139',
-                user: env.db_User,
-                password: env.db_Pass,
-                database: env.db_Table,
-            },
-            dumpToFile: path.resolve(`${env.backup}/${dumpFileName}`),
-            compressFile: true
-        });*/
     }
 
 }

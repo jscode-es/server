@@ -1,67 +1,40 @@
 include ./include/head.pug
-.container.text-center.p-5.bg-content
-    nav
-        a(href="/" class="logo") 
-            img(src="/img/jscode_trans.png", alt="JSCode")
-        .nav-right
-            span.isOnline.active is online
-            a(href="https://www.twitch.tv/jscode_") 
-                i.fab.fa-twitch
-            a(href="https://www.instagram.com/jscode_es/")  
-                i.fab.fa-instagram
-            a(href="https://twitter.com/jscode8")
-                i.fab.fa-twitter
-    .row.p-5
-        .col.p-5 
-            //-h1.title Design Driven Development Your Web Products
-            h1.title Desarrollo Optimo y Escalable en Node JS
-            h2.subtitle Aprende a programar en Javascript
-    .row.p-5.mb-5.position-relative
-        .col.target-col 
-            a(href="/news") 
-                i.far.fa-newspaper
-                h3 Noticias
-                p.
-                    Lorem ipsum dolor sit amet, consectetur adi, arsed minus obcaecati rem, facilis odit.
-        .col.target-col  
-            a(href="/tutorial") 
-                i.fab.fa-node
-                h3 Tutoriales 
-                p.
-                    Lorem ipsum dolor sit amet, consectetur adi, arsed minus obcaecati rem, facilis odit.
-        .col.target-col 
-            a(href="/api")  
-                i.fas.fa-server
-                h3 Api Publicas
-                p.
-                    Lorem ipsum dolor sit amet, consectetur adi, arsed minus obcaecati rem, facilis odit.
-.container
-    .row.p-5.row-bg-l.gx-5.mb-5 
-        .col
-            .video
-                i.far.fa-play-circle
-        .col.text-start.position-relative
-            i.fab.fa-twitch.icon-twitch
-            h1 Titulo del último video en Twitch
-            p.
-                Sit amet consectetur adipisicing elit. Voluptate nostrum velit officiis ipsum, voluptates esse rem omnis repellat animi tempore nam reprehenderit dolorum voluptatum saepe repellendus aliquam recusandae. Labore, laborum?
-            p.
-                ate nostrum velit officiis ipsum, voluptates esse rem omnis rep
-            a.btn-link(href="/", target="_blank") Ven a verme
-    .row.p-5
-        .row
-            .col.header-news
-                h2 Nueva noticias
-                p.
-                   Etam fuga quos cumque recusandae magni dolorem accusantium. Sequi, ratione!
-        .row
-            each val in publish
-                .col
-                    .card 
-                        .content
-                            span=val.blog_type
-                            h3=val.title
-                            p=val.subtitle
-                            a(href="/"+val.blog_type+"/"+val.url) Ver contenido
-                
-include ./include/footer.pug
+#main.scroll-container
+	nav.menu-web
+		div.d-none
+		div.d-none 
+		.group-btn-login.d-none 
+			button.click(e-method="login") Login
+			button.click(e-method="register") Registro
+	section
+		.margin-center.text-center
+			.block-twitch
+				img(src="img/TwitchExtrudedWordmarkPurple.svg", alt="")
+				span Último followers
+				.list-follow
+					div
+					div
+					div
+					div
+					div
+			span.d-block.subtitle algoritmo de la programación
+			h1.title Programa rápidamente y de manera eficaz #[span.emoji-like 👍]
+			.group-btn
+				a(href="" class="click btn btn-confirm" e-method="demo") Ver demostración 
+				a(href="" class="click btn btn-normal" e-method="register") Accede al panel
+			img(src="img/panel.png", alt="" class="panel-img")
+	section
+		.margin-center
+			.content-col
+				.col-1
+				.col 
+					span 🥰 We keep the terms simple
+					h3 Cumque architecto, consequuntur expedita facere repellat! Repudiandae?
+					p.
+						Lorem ipsum dolor sit amet consectetur adipisicing elit libero tenetur voluptatibus amet, delectus quos et fugit in!
+					p.
+						Son tempore architecto maxime quaerat laudantium unde, corruptme quaer
+						at laudantium unde, corrupti magnam delectume quaerat laudantium
+						 unde, corrupti magnam delectume quaerat laudantium unde, cor
+						 rupti magnam delectume quaerat laudanti
+						 um unde, corrupti magnam delectui magnam delectus modi at fugiat mollitia facere quod.

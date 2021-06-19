@@ -1,0 +1,26 @@
+.swal2-close:focus {
+	outline: none;
+	box-shadow: none !important;
+}
+
+.modal-container {
+	padding: 0 !important;
+}
+
+.modal-content {
+	display: flex;
+	& > div {
+		width: 100%;
+		min-height: 60px;
+
+		&:nth-child(1) {
+			background: #f1f1f1;
+		}
+	}
+}
+
+.modal-popup {
+	overflow: hidden !important;
+	border-radius: 15px !important;
+	box-shadow: 0px 1px 20px 1px #4c4c4cb5 !important;
+}

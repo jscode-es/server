@@ -1,7 +1,7 @@
 const env = process.env
 
 import path from 'path'
-import fs from 'fs-extra'
+import github from './github'
 import Language from './language'
 import Subdomain from './subdomain'
 
@@ -41,7 +41,10 @@ export default class router
         // TODO: Enrutado de la carpeta de los subdominios
         
         let controller = await(await import(`${pathController}`)).default
-        new controller(req, res, next)
+        
+        let result = new controller(req, res, next)
+
+        return result
 
 
     }

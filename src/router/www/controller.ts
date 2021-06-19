@@ -24,6 +24,8 @@ export default class www
 		// Recover attrs
 		let { res, req } = this
 
+		console.log(req.user)
+
 		// Request data
 		let { method, params, isJsonRequest, query } = req
 
@@ -38,13 +40,13 @@ export default class www
 			// Response JSON
 			if(isJsonRequest)
 			{
-				data = await resource.json()
+				data = await resource.json({res, req})
 				return res.json(data)
 
 			// Response HTML
 			} else {
 
-				data = await resource.html(page)
+				data = await resource.html({page ,res, req})
 
 				if(data) return res.send(data)
 				else res.redirect('/')

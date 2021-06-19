@@ -1,11 +1,15 @@
 import render from './../../../controller/render'
 import database from './../../../controller/database'
+import Youtube from '../../../controller/youtube'
 
 export default class index
 {
     static async html()
     {
         let publish = await index.getPublish()
+
+        //let videos   = await Youtube.getVideos()
+        //let playlist = await Youtube.getPlaylist()
 
         let html = render.file('www/index',{ publish })
         

@@ -15,6 +15,8 @@ import session from 'express-session'
 import compression from 'compression'
 import cors from 'cors'
 import socket from './websocket'
+import passport from "passport"
+import { Strategy } from 'passport-github'
 
 // Store ram
 import redis from 'redis'
@@ -24,8 +26,9 @@ const redisClient = redis.createClient()
 const redistStore = redisConnect(session)
 
 import router from './../router'
-import { log } from "node:console"
 import twitch from './../twitch'
+import youtube from '../youtube'
+import github from '../github'
 
 export default class http2
 {
@@ -250,11 +253,51 @@ export default class http2
             // https://jscode.es/about
             new socket(server)
 
-            that.app.use('/', router.getRouter )
+            that.app.use(passport.initialize())
+            that.app.use(passport.session())
+
+            let setting =
+            {
+                clientID: String(env.GITHUB_CLIENT_ID),
+                clientSecret: String(env.GITHUB_CLIENT_SECRET),
+                callbackURL: "https://localhost/github/callback"
+            }
+
+            passport.serializeUser((user:any,cb:any)=>{
+                cb(null,user.id)
+
+            })
+
+            passport.deserializeUser((id:any,cb:any)=>{
+                cb(null,id)
+
+            })
+
+            passport.use(new Strategy(setting,github.resolve))
+            
+            that.app.get('/github/auth',passport.authenticate('github'));
+
+            that.app.get('/github/callback', 
+            passport.authenticate('github', { failureRedirect: '/' }),
+            function(req:any, res:any) {
+                // Successful authentication, redirect home.
+                res.redirect('/');
+            });
+
+            let isAuth = (req:any,res:any,next:any)=>
+            {
+                if(req.user)
+                {   console.log('Continue==========')
+                    next()
+                } else {
+                    console.log('Redirect==========')
+                    res.redirect('/')
+                }
+            }
+            
+            that.app.use('/', isAuth, router.getRouter )
 
             that.app.use(this.error)
-
-            //twitch.test()
 
         })
         

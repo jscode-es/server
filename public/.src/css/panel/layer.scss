@@ -1,0 +1,168 @@
+.mw-300 {
+	max-width: 300px;
+}
+
+.mb-50 {
+	margin-bottom: 50px;
+}
+
+.margin {
+	margin: 35px;
+	display: flex;
+	justify-content: space-between;
+
+	& > div {
+		width: 100%;
+	}
+}
+
+.margin-header {
+	margin: 0px 35px;
+	display: flex;
+	align-content: center;
+	justify-content: space-between;
+	& > div {
+		& h2 {
+			display: flex;
+		}
+	}
+}
+
+.panel {
+	background: transparent;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	display: flex;
+	visibility: hidden;
+
+	& > nav {
+		background: #f6f9fe;
+		width: 80px;
+		max-width: 80px;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		left: -80px;
+		transition: 0.5s;
+	}
+
+	& > main {
+		background: white;
+		width: 100%;
+		left: 100%;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		transition: 0.5s;
+
+		& > header {
+			height: 70px;
+			border-bottom: solid 2px #f6f9fe;
+		}
+
+		& > content {
+			height: calc(100% - 72px);
+		}
+	}
+
+	&.animation {
+		visibility: visible;
+		& > nav {
+			left: 0px;
+		}
+
+		& > main {
+			left: 0px;
+		}
+	}
+}
+
+.info-alert {
+	font-weight: 100;
+	color: #75879c;
+	font-size: 15px;
+	margin-left: 20px;
+	line-height: 35px;
+	& > b {
+		color: #1a7cff;
+	}
+}
+
+.group-label {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	margin-bottom: 50px;
+	& > .label {
+		border: solid 1px #d4d9e0;
+		padding: 20px 30px;
+		border-radius: 10px;
+		width: 100%;
+		max-width: 185px;
+		margin-right: 15px;
+		& span {
+			display: block;
+
+			&:nth-child(1) {
+				color: #8d99a9;
+				margin-bottom: 5px;
+			}
+
+			&:nth-child(2) {
+				font-size: 40px;
+				font-weight: bold;
+			}
+		}
+
+		&:last-child {
+			margin-right: 0px;
+		}
+
+		&.highlight {
+			border: solid 3px #1a7cff;
+			background: #f2f7ff;
+		}
+	}
+}
+
+.video-list {
+	background: #ececec;
+	padding: 23px;
+	border-radius: 15px;
+	margin-bottom: 20px;
+
+	& > img {
+		width: 100%;
+		border-radius: 10px;
+		margin-bottom: 12px;
+	}
+
+	& > h4 {
+		margin: 0;
+		font-size: 20px;
+		margin-bottom: 5px;
+	}
+
+	& > p {
+		margin: 0;
+		margin-bottom: 10px;
+	}
+
+	& > a {
+		background: #0066ff;
+		color: white;
+		text-decoration: none;
+		padding: 10px 20px;
+		display: inline-block;
+		border-radius: 5px;
+		transition: 0.3s;
+
+		&:hover {
+			cursor: pointer;
+			background: #01327b;
+		}
+	}
+}

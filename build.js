@@ -13,18 +13,14 @@ class Compiler
     {   
         console.time('[ Build ] Compiler file');
 
-        // Compilar código publico
         await Compiler.getList('public');
-
-        // Compolar código privado
-        //await Compiler.getList('private');
 
         console.timeEnd('[ Build ] Compiler file');
     }
 
-    static getList(name='public')
+    static getList()
     {
-        let dir     = `front/${name}`;
+        let dir  = `public/.src`;
         
         return new Promise(res=>fs.readdir( dir, (err, list) => {
             
@@ -32,17 +28,20 @@ class Compiler
             
             for (const item of list) 
             {
-                let subDirName = `${dir}/${item}`;
-
-                fs.readdir(subDirName,(err,subDirs)=>{
-
-                    if(err) return;
-
-                    for (const subDir of subDirs) 
-                    {
-                        Compiler.prepare(`${subDirName}/${subDir}`);
-                    }
-                });
+                if(item!='common')
+                {
+                    let subDirName = `${dir}/${item}`;
+                                   
+                    fs.readdir(subDirName,(err,subDirs)=>{
+    
+                        if(err) return;
+                        
+                        for (const subDir of subDirs) 
+                        {
+                            Compiler.prepare(`${subDirName}/${subDir}`);
+                        }
+                    });
+                }
             }
 
             res(true);
@@ -52,16 +51,17 @@ class Compiler
 
     static prepare(infile)
     {
-        let splitDir  = infile.split('/');
-        let isPrivate = splitDir[1] === 'public' ? 'public' : 'private';
-        let [fileName, ext] = splitDir[splitDir.length-1].split('.')
-        let folder    = ext === 'scss' ? 'css' : 'js'
+        let splitDir = infile.split('/');
+        let filename = splitDir[3]
+        let ext    = splitDir[2] === 'js' ? 'ts' : 'scss'
 
-        let outfile = `${isPrivate}/${folder}/${fileName}.min.${folder}`
-        
+        let outfile = `public/${splitDir[2]}/${filename}.min.${splitDir[2]}`
+
+        infile = `${infile}/main.${ext}`
+    
         if (fs.existsSync(infile)) 
         {
-            Compiler.build(infile,outfile);
+           Compiler.build(infile,outfile);
         }
 
     }

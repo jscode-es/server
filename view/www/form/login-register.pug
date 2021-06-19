@@ -1,0 +1,37 @@
+.modal-content
+    div(style="background: url(img/img-register.jpg);background-size: cover;background-position-x: -155px;")
+    div
+        .margin
+            .block-login
+                .logo
+                    img(src="img/jscode_trans.png", alt="")
+                h3 Regístrate en tu cuenta
+                .group-register
+                        a(href="/").twitch
+                            i.fab.fa-twitch
+                        a(href="/github/auth").github
+                            i.fab.fa-github
+                        a(href="").google
+                            i.fab.fa-google
+                form
+                    .input
+                        i.far.fa-envelope 
+                        input(type="text", name="email", placeholder="Su email" data-lpignore="true")
+                    .input
+                        i.far.fa-user 
+                        input(type="text", name="", placeholder="Su nombre" data-lpignore="true")
+                    .input
+                        i.fas.fa-unlock
+                        input(type="password", name="", placeholder="Crear contraseña" data-lpignore="true")
+                    p.
+                        Al registrarse, confirma que ha leído y 
+                        aceptado nuestro #[a(href="#") Aviso de usuario] y #[a(href="#") Política de privacidad].
+                    input(type="submit")
+                    //.group-register
+                        button.twitch
+                            i.fab.fa-twitch
+                        button.github
+                            i.fab.fa-github
+                        button.google
+                            i.fab.fa-google
+        span.isLogin ¿Ya tienes una cuenta JSCode? Iniciar sesión

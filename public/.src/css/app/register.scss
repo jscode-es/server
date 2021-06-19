@@ -1,0 +1,148 @@
+.block-login {
+	width: 300px !important;
+	margin: 0 auto;
+	& > .logo {
+		width: 70px;
+		margin: 0 auto;
+		& > img {
+			width: 100%;
+		}
+	}
+
+	& > h3 {
+		color: #002267;
+	}
+
+	& > form {
+		& p {
+			color: #545353;
+			font-size: 12px;
+			margin-bottom: 25px;
+			opacity: 0.7;
+			margin-top: 25px;
+			& a {
+				color: #0066ff;
+				text-decoration: none;
+			}
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+
+		& > input[type="submit"],
+		& > button {
+			display: block;
+			width: 100%;
+			border-radius: 10px;
+			border: solid 1px transparent;
+			padding: 10px;
+			margin-bottom: 10px;
+			background: transparent;
+		}
+
+		& > input[type="submit"] {
+			background: #1a7cff;
+			color: white;
+		}
+
+		& .or {
+			display: block;
+			margin-bottom: 10px;
+			font-size: 14px;
+			color: #666666;
+		}
+
+		& > button {
+		}
+	}
+
+	& > span {
+	}
+}
+
+.isLogin {
+	display: block;
+	background: #f3f3f3;
+	color: #0066ff;
+	padding: 20px;
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.input {
+	border: solid 1px #e6e6e6;
+	border-radius: 10px;
+	margin-bottom: 15px;
+	display: flex;
+
+	& > i {
+		width: 40px;
+		height: 35px;
+		text-align: center;
+		line-height: 35px;
+		opacity: 0.5;
+		font-size: 15px;
+	}
+
+	& > input {
+		border: none;
+		outline: none;
+		color: #1a7cff;
+	}
+}
+
+.group-register {
+	margin-bottom: 30px;
+	& a {
+		font-size: 26px;
+		width: 50px;
+		border-radius: 5px;
+		border: solid 0px #c1c1c1;
+		height: 49px;
+		background: #efefef;
+		margin-right: 10px;
+		cursor: pointer;
+		display: inline-block;
+		line-height: 50px;
+
+		&:last-child {
+			margin-right: 0px;
+		}
+
+		& i.fa-twitch {
+			color: #9146ff;
+			position: relative;
+			top: 2px;
+		}
+
+		& i.fa-google {
+			color: #1a7cff;
+		}
+
+		& i.fa-github {
+			color: #3c3842;
+		}
+
+		&.twitch:hover {
+			background: #9146ff;
+			& > i {
+				color: white;
+			}
+		}
+
+		&.github:hover {
+			background: #3c3842;
+			& > i {
+				color: white;
+			}
+		}
+
+		&.google:hover {
+			background: #1a7cff;
+			& > i {
+				color: white;
+			}
+		}
+	}
+}
