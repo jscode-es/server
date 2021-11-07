@@ -2,9 +2,17 @@
   "name": "jscode",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/start.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run dev",
+    "dev": "cross-env NODE_ENV=development nodemon",
+    "build": "npm run clean && npm run tsc:server && npm run tsc:public && npm run move && npm run public && npm run sass",
+    "tsc:server": "tsc --project tsconfig.server.json && tscpaths -p tsconfig.server.json -s ./src -o ./dist",
+    "tsc:public": "tsc --project tsconfig.public.json && tscpaths -p tsconfig.public.json -s ./src -o ./dist",
+    "clean": "rimraf dist/",
+    "move": "copyfiles -u 1 src/**/*.pug dist/",
+    "public": "copyfiles -u 1 src/**/*.txt src/**/*.xml dist/",
+    "sass": "node-sass src/public/scss/ -o dist/public/css --output-style compressed"
   },
   "repository": {
     "type": "git",
