@@ -1,74 +1,73 @@
-const env = process.env
+// Cargar modulos de Node JS
+import fs from "fs-extra"
+import path from "path"
 
-import path from 'path'
-import github from './github'
-import Language from './language'
-import Subdomain from './subdomain'
+// Modulos propio
+import Language from "./language"
+import Subdomain from "./subdomain"
 
-export default class router
-{
-    static allowSubdomain = [ 'www', 'panel', 'api', 'img' ] 
+class Router {
+    private static domains: any = {}
 
-    static async getRouter( req:any, res:any, next:any )
-    {
-        // Controller
-        let language  = new Language(req)
-        let subdomain = new Subdomain(req, router.allowSubdomain)
+    static async getRouter(req: any, res: any, next: any) {
 
-        // Language client
+        // Subdominios validos
+        let allowSubdomains = ['www']
+
+        // Controladores
+        let language = new Language(req)
+        let subdomain = new Subdomain(req, allowSubdomains)
+
+        // Idioma del cliente
         language.client()
 
-        // Router subdomain
+        // Enrutamiento de los sub dominios
         subdomain.router()
 
-        // Convert to lowercase method
+        // Metodo de petición
         req.method = req.method.toLowerCase()
 
-        // Get params
-        req.params = router.getParams(req._parsedUrl.pathname)
+        req.params = Router.getParamsUrl(req._parsedUrl.pathname)
 
-        // Load controller specific subdomain
-        let currentRouter = req.subdomain ?  req.subdomain : 'www'
-        let pathController = path.resolve(`${__dirname}/../router/${currentRouter}/controller`)
-        
-        // INFO: check type file afte compiler
-        /*if(!fs.existsSync(`${pathController}.ts`))
-        {
-            console.log(`[ Router ] This controller not found: ${currentRouter}`)
+        // Cargar controlador especifico del subdominio
+        let route = req.subdomain ? req.subdomain : 'web'
+        let pathController = path.join(`${__dirname}/../router/${route}/controller`)
+
+        if (!fs.existsSync(pathController + '.js')) {
+            console.log(`[ Router ] This controller not found: ${route}`)
             return next()
-        }*/
-
-        // TODO: Enrutado de la carpeta de los subdominios
-        
-        let controller = await(await import(`${pathController}`)).default
-        
-        let result = new controller(req, res, next)
-
-        return result
-
-
-    }
-
-    private static getParams(pathname:any)
-    {
-        let params       = pathname.split('/').join(' ').trim().split(' ')
-        let index        = 0
-        let paramsName   = [ 'service', 'page' ]  // https://${host}/${service}/${page} ej: https://jscode.es/about/cv
-        let objectParams:any = {}
-
-        for (const param of params) 
-        {
-            if(param.length != 0) 
-            {
-                if(paramsName[index])
-                    objectParams[paramsName[index]] = String(param).trim()
-                else
-                    paramsName[index] = String(param).trim()
-            }
-
-            index++
         }
 
-        return objectParams
+        if (Router.domains[route] === undefined) {
+            Router.domains[route] = (await import(pathController)).default
+        }
+
+        let domains = Router.domains[route]
+
+        new domains(req, res, next)
+    }
+
+    static getParamsUrl(pathname: any) {
+
+        let params = pathname.split('/').join(' ').trim().split(' ')
+        let paramsObj: any = {}
+        let i = 0
+        let paramName: any = ['service', 'page']
+
+        for (const param of params) {
+
+            if (param.length != 0) {
+                if (paramName[i])
+                    paramsObj[paramName[i]] = param
+                else
+                    paramsObj[i] = param
+            }
+
+            i++
+        }
+
+        return paramsObj
     }
 }
+
+export default Router

@@ -1,45 +1,46 @@
-const env =  process.env
+const $ = process.env
 
-import isIp from 'is-ip'
+// Modulos de terceros
+import isIp from "is-ip"
 
-export default class subdomain
-{
-    private req:any
-    private subdomains:any
+export default class Subdomain {
 
-    constructor(req:any, allowSubdomain:object)
-    {
-        this.req     = req
-        this.subdomains = allowSubdomain
+    private req: any
+    private domains: any
+
+    constructor(req: any, domains: any) {
+        this.req = req
+        this.domains = domains
     }
 
-    router()
-    {
-        let { req, subdomains } = this
+    // Detectar si hay un subdominio permitido
+    router() {
 
-        let def_host      = 'localhost'
-        let def_subdomain = subdomains[0]
+        let req = this.req
+        let domains = this.domains
+        let host = 'localhost' // Default
+        let subdomain: any = 'www' // Enrutamiento 
 
-        if(!isIp(req.headers.host)) // host: 127.0.0.1:433 or jscode.es
-        {
-            def_host = req.headers.host.split(':')[0]
+        if (!isIp(req.headers.host)) {
+            if (req.headers.host) {
+                host = req.headers.host.split(':')[0]
+            }
         }
 
-        let sub = def_host.split('.')
+        let sub = host.split('.')
 
-        let subLen = ( env.NODE_ENV && env.NODE_ENV === 'development' ) ? 2 : 3
+        let subLength = ($.NODE_ENV && $.NODE_ENV == 'development') ? 2 : 3
 
-        def_subdomain = sub.length === subLen ? sub[0] : def_subdomain
-        
-        // Check subdomain not exist ?
-        if(subdomains.indexOf(def_subdomain)=== -1 && sub.length >= subLen)
-        {
+        subdomain = sub.length == subLength ? sub[0] : subdomain
+
+        if (domains.indexOf(subdomain) == -1 && sub.length >= subLength) {
             return false
         }
 
-        // set subdomain
-        req.subdomain = def_subdomain
+        // Set subdomain
+        req.subdomain = subdomain
 
         return true
     }
+
 }

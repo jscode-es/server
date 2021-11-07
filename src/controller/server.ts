@@ -1,80 +1,44 @@
-import { ISettingServer } from "./interface/i_setting_server"
-import { helper } from "./helper"
+// Environment variable
+const $ = process.env
 
-const { isString, isStringEmpty, stringLowerCase } = helper
+// Loading Node JS modules
+import path from "path"
+import fs from "fs-extra"
 
-export default class server
-{
-    private static HTTP2:string = 'http2'
-    private setting?:ISettingServer 
+//Type Server
+enum Types {
+    HTTP,
+    HTTPS,
+    HTTP2,
+    HTTP3
+}
 
-    constructor( type:string=server.HTTP2, options:object={} )
-    {   
-        if(isString(type) && !isStringEmpty(type))
-        {
-            // Inicialize setting
-            this.setSetting(options)
+// Main class
+class Server {
 
-            // Create server
-            this.create(stringLowerCase(type))
-        }
-    }
+    static Types = Types
 
-    // Set setting server
-    private setSetting(options:object|ISettingServer|undefined):void
-    {
-        let _default:ISettingServer =
-        {
-            forceSSL:true,
-            extended:false,
-            port:80, // 80
-            portSecure:443, //433
-            limit:'50mb'
-        }
+    constructor(mode: any) {
 
-        Object.assign(_default, options)
-
-        this.setting = _default
+        this.create(Server.Types[mode])
     }
 
     // Create server
-    private async create(typeServer:string)
-    {
-        // Override force ssl
-        this.setRequiredSSL(typeServer)
+    private async create(type_server: any) {
 
-        // Path type server
-        let dir = `./type_server/${typeServer}`
+        let type: string = String(type_server).toLowerCase()
 
-        //TODO: Check file exist
+        let dir = path.resolve($.services as string, `${type}.js`)
 
-        let controller = await(await import(dir)).default
+        console.log(`[ SERVER ] ${type}...`)
 
-        if(typeof controller === 'function')
-        {
-            new controller(this.getSetting())
+        if (fs.existsSync(dir)) {
+
+            let service = await (await import(dir)).default
+
+            return new service()
         }
-
-    }
-
-    // Require force SSL
-    private setRequiredSSL(typeServer:string)
-    {
-        let typeServerList = [ 'https', 'http2', 'ftps', 'wss' ]
-
-        if( typeServerList.indexOf(typeServer) != -1 )
-        {
-            let setting = this.getSetting()
-
-            Object.assign(setting, { forceSSL: true })
-
-            this.setSetting(setting);
-        }
-    }
-
-    // Get setting server
-    private getSetting():ISettingServer | undefined
-    {
-        return this.setting
     }
 }
+
+export default Server

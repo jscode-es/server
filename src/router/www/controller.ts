@@ -1,68 +1,115 @@
-import path from 'path'
+// Environment variable
+const $ = process.env
 
-export default class www
-{
-	private req:any
-	private res:any
-	private next:any
+// Loading Node JS modules
+import path from "path"
+import fs from "fs"
 
-	constructor(req:any, res:any, next:any)
-	{
-	   	this.req  = req
-	   	this.res  = res
-		this.next = next
+// Load controller
+import render from "@controller/render"
 
-		this.launch()
-	}
+export default class Controller {
 
-	async launch()
-	{
-		let data:any 		= null
-		let pathService:any = null
-		let resource:any 	= null
+    private req: any
+    private res: any
 
-		// Recover attrs
-		let { res, req } = this
+    constructor(req: any, res: any) {
 
-		console.log(req.user)
+        this.req = req
+        this.res = res
 
-		// Request data
-		let { method, params, isJsonRequest, query } = req
+        this.init()
+    }
 
-		// service ej. [ service ] blog, about, .... [ page ] ${service}/programa_con_nodejs
-		let { service, page } = params
+    async init() {
 
-		if(service)
-		{
-			pathService = path.resolve(`${__dirname}/${method}/${service}`)
-			resource = await(await import(pathService)).default
+        let { res, req } = this
 
-			// Response JSON
-			if(isJsonRequest)
-			{
-				data = await resource.json({res, req})
-				return res.json(data)
+        // Request data
+        let { method, params, isJsonRequest, query } = req
 
-			// Response HTML
-			} else {
+        let html = ''
 
-				data = await resource.html({page ,res, req})
+        // Service
+        let { service } = params
 
-				if(data) return res.send(data)
-				else res.redirect('/')
-			}
-		}
+        // Check request service
+        if (service) {
 
-		// Pagina principal
-		if(!isJsonRequest && service === undefined)
-		{
-			pathService = path.resolve(`${__dirname}/${method}/index`)
-			resource = await(await import(pathService)).default
+            method = method.toLowerCase()
+            service = service.toLowerCase().trim()
 
-			data = await resource.html()
-			return res.send(data)
-		}
+            let { directory, directoryJS } = Controller.getDir(method, service)
 
-		return res.status(404).send('This page not exist')
-	}
+            if (isJsonRequest) {
+
+                let data = {}
+
+                if (fs.existsSync(`${directoryJS}.js`)) {
+
+                    let control = (await import(directoryJS)).default
+
+                    data = await control.json({ req })
+
+                }
+
+                return res.json(data)
+            }
+
+
+            if (fs.existsSync(directory)) {
+
+                let data = {}
+
+                if (fs.existsSync(`${directoryJS}.js`)) {
+
+                    let control = (await import(directoryJS)).default
+
+                    data = await control.getContent({ query, params })
+                }
+
+                html = render.pug(directory, data)
+
+                return res.send(html)
+            }
+
+            return res.redirect('/')
+
+        }
+
+        // Cargar página de inicio
+        if (!isJsonRequest && service === undefined) {
+
+            let { directory, directoryJS } = Controller.getDir(method, 'index')
+
+            if (fs.existsSync(directory)) {
+
+                let data = {}
+
+                if (fs.existsSync(`${directoryJS}.js`)) {
+
+                    let control = (await import(directoryJS)).default
+
+                    data = await control.getContent({ query, params })
+                }
+
+                html = render.pug(directory, data)
+
+                return res.send(html)
+            }
+        }
+
+        return res.status(404).send('Not found')
+    }
+
+    static getDir(method: any, service: any) {
+
+        let index = (service === 'index') ? '' : 'page/'
+
+        let directory = path.resolve(`${$.view}/www/${index}${service}.pug`)
+        let directoryJS = path.resolve(`${$.web}/${method}/${service}`)
+
+        return { directory, directoryJS }
+    }
+
 }
