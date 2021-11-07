@@ -13,19 +13,19 @@
         "src/public/**/*"
     ],
     "compilerOptions": {
-        "target": "ES2020",
-        "module": "commonjs",
+        "target": "es6",
+        "module": "es2020",
         "lib": [
-            "ES2020",
-            "DOM"
+            "es6",
+            "dom"
         ],
         "allowJs": false,
         "checkJs": false,
         "declaration": false,
         "declarationMap": false,
         "sourceMap": true,
-        "outDir": "dist",
-        "rootDir": "./src",
+        "outDir": "dist/public",
+        "rootDir": "./src/public",
         "removeComments": true,
         "isolatedModules": false,
         "strict": true,

@@ -1,0 +1,55 @@
+.title-presentation
+{
+    width: 55vw;
+    max-width: 800px;
+
+    & > span
+    {
+        color: #b5b5b5;
+        font-size: 1vw;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        display: block;
+        position: relative;
+        left: -200px;
+        opacity: 0;
+        transition: .5s;
+        transition-delay: .5s;
+
+        &.show
+        {
+            left: 0;
+            opacity: 1;
+        }
+    }
+
+    & > h1 
+    {
+        color: white;
+        font-size: 7vw;
+        line-height: 0vw;
+        transition: .5s;
+        opacity: 0;
+
+        &.show
+        {
+            line-height: 6vw;
+            opacity: 1;
+        }
+    }
+}
+
+.gradient-text
+{
+	background: linear-gradient(135deg, #CB5EEE 0%, #4BE1EC 100%);
+    color: #9D8EEE;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: clone;
+}
+
+.margin
+{
+    padding: 50px 130px;
+}
