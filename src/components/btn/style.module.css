@@ -1,0 +1,23 @@
+.container {
+    background-color: #03a9f4;
+    font-size: 30px;
+    padding: 10px 40px;
+    border-radius: 10px;
+    transition: .3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container:hover {
+    cursor: pointer;
+    background-color: #20f0cb;
+    color: #0c0c14;
+}
+
+.container span {
+    text-transform: uppercase;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+}

@@ -1,0 +1,29 @@
+.container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.container h1 {
+    color: #20f0cb;
+    font-size: 100px;
+    text-align: center;
+    font-weight: bold;
+    line-height: 110px;
+    margin-bottom: 40px;
+}
+
+.container h4 {
+    font-size: 25px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+}
+
+.container h5 {
+    margin-bottom: 30px;
+    font-size: 20px;
+}
