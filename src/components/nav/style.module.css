@@ -1,0 +1,12 @@
+.container {
+
+    position: absolute;
+    right: 0;
+    font-size: 31px;
+    transition: .3s;
+}
+
+.container:hover {
+    cursor: pointer;
+    transform: rotate(90deg);
+}
