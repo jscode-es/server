@@ -1,0 +1,21 @@
+.container {
+
+    transition: .3s;
+    color: white;
+    background: #03a9f4;
+    border-radius: 10px;
+    padding: 10px 20px;
+    display: inline-flex;
+}
+
+.container:hover {
+    cursor: pointer;
+    background: #14ad92;
+}
+
+.container span {
+    display: initial;
+    margin: auto;
+    font-size: 20px;
+
+}
