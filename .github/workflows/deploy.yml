@@ -16,15 +16,15 @@ jobs:
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
+      - name: Recuperar repositorio
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Instalar node
         uses: actions/setup-node@v2
         with:
           cache: npm
           node-version: "16.14.2"
-      - name: Recuperar repositorio
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Instalar dependecias
         run: npm ci
       - name: Construir aplicación
@@ -37,4 +37,5 @@ jobs:
           SOURCE: "dist/"
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
           EXCLUDE: "/dist/, /node_modules/"
