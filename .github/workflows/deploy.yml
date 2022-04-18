@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Cancelar ejecuciones anteriores
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+      - name: Recuperar repositorio
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Instalar node
+        uses: actions/setup-node@v2
+        with:
+          cache: npm
+          node-version: "16.14.2"
+      - name: Instalar dependecias
+        run: npm i
+      - name: Construir aplicación
+        run: npm run build
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PUBLIC_KEY }}
+          known_hosts: "just-a-placeholder-so-we-dont-get-errors"
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+      - name: Directory
+        run: ls -la
+      - name: Deploy with rsync
+        run: |
+          rsync --archive --human-readable  --exclude="*" ./* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/server
+      - name: Directory 2
+        run: ls -la
