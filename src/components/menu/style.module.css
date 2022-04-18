@@ -1,0 +1,66 @@
+.container {
+
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    visibility: hidden;
+
+}
+
+.container>div {
+    width: 50%;
+    position: relative;
+}
+
+.container .col1>div {
+    background: #0c0c14;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    top: -100%;
+    transition: .5s;
+}
+
+.container .col2>div {
+    background: #319986;
+    background: #efefef;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    right: -100%;
+    transition: .5s;
+    color: #0c0c14;
+
+}
+
+.container.show {
+    visibility: visible;
+}
+
+.container.show .col1>div {
+    top: 0%;
+}
+
+.container.show .col2>div {
+    right: 0%;
+}
+
+.title {
+    display: flex;
+    grid-gap: 20px;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.title>div:nth-child(1) {
+    max-width: 140px;
+    width: 100%;
+    height: 140px;
+}
