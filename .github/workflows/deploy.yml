@@ -35,4 +35,4 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
-          EXCLUDE: "/node_modules/, /.github/, /doc/, /public/img/"
+          EXCLUDE: "/node_modules/, .git/, .github/, /doc/, /public/img/"
