@@ -27,8 +27,6 @@ jobs:
           node-version: "16.14.2"
       - name: Instalar dependecias
         run: npm ci
-      - name: Construir aplicación
-        run: npm run build --if-present
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         env:
